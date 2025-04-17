@@ -35,6 +35,9 @@ araba2 = Araba(400, 500, BLUE, ["UP", "DOWN", "LEFT", "RIGHT"])
 
 kazanan = None
 
+# Zorluk sayacı (her 10 saniyede bir hız artırma)
+zorluk_sayaci = pygame.time.get_ticks()
+
 # Ana oyun döngüsü
 running = True
 while running:
@@ -42,19 +45,35 @@ while running:
 
     # Engelleri çiz ve çarpışma kontrolü yap
     for engel in engeller:
+        engel.hareket_et(WIDTH, HEIGHT, bitis_y)  # Ekran boyutları ve bitiş çizgisi parametrelerini ekleyin
         engel.ciz(screen)
 
+        # Çarpışma kontrolü
         if engel.carpti_mi(araba1):
             print("Oyuncu 1 kaza yaptı!")
+            font = pygame.font.SysFont(None, 60)
+            text = font.render("Oyuncu 1 Kaza Yaptı!", True, (255, 0, 0))
+            screen.blit(text, (WIDTH // 2 - 200, HEIGHT // 2))
+            pygame.display.flip()
             pygame.time.delay(2000)
             pygame.quit()
             sys.exit()
 
         if engel.carpti_mi(araba2):
             print("Oyuncu 2 kaza yaptı!")
+            font = pygame.font.SysFont(None, 60)
+            text = font.render("Oyuncu 2 Kaza Yaptı!", True, (255, 0, 0))
+            screen.blit(text, (WIDTH // 2 - 200, HEIGHT // 2))
+            pygame.display.flip()
             pygame.time.delay(2000)
             pygame.quit()
             sys.exit()
+
+    # Zorluk seviyesini artır (her 10 saniyede bir engel hızını arttır)
+    if pygame.time.get_ticks() - zorluk_sayaci > 10000:  # 10.000 ms = 10 sn
+        for engel in engeller:
+            engel.hizi_arttir()  # Engelin hızını artır
+        zorluk_sayaci = pygame.time.get_ticks()  # Zamanı sıfırla
 
     # Bitiş çizgisi
     pygame.draw.rect(screen, GREEN, (0, bitis_y, WIDTH, 10))
