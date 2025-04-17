@@ -1,6 +1,7 @@
 import pygame
 import sys
 from araba import Araba
+from engel import Engel
 
 pygame.init()
 
@@ -20,6 +21,11 @@ GREEN = (0, 255, 0)
 
 # Bitiş çizgisi
 bitis_y = 50
+engeller = [
+    Engel(300, 400),
+    Engel(150, 300),
+    Engel(500, 200)
+]
 
 # Arabalar
 araba1 = Araba(200, 500, RED, ["w", "s"])
@@ -31,6 +37,22 @@ kazanan = None
 running = True
 while running:
     screen.fill(WHITE)
+    # Engelleri çiz
+for engel in engeller:
+    engel.ciz(screen)
+
+    # Çarpışma kontrolü
+    if engel.carpti_mi(araba1):
+        print("Oyuncu 1 kaza yaptı!")
+        pygame.time.delay(2000)
+        pygame.quit()
+        sys.exit()
+
+    if engel.carpti_mi(araba2):
+        print("Oyuncu 2 kaza yaptı!")
+        pygame.time.delay(2000)
+        pygame.quit()
+        sys.exit()
 
     # Bitiş çizgisi çiz
     pygame.draw.rect(screen, GREEN, (0, bitis_y, WIDTH, 10))
