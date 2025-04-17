@@ -21,15 +21,17 @@ GREEN = (0, 255, 0)
 
 # Bitiş çizgisi
 bitis_y = 50
+
+# Engeller
 engeller = [
     Engel(300, 400),
     Engel(150, 300),
     Engel(500, 200)
 ]
 
-# Arabalar
-araba1 = Araba(200, 500, RED, ["w", "s"])
-araba2 = Araba(400, 500, BLUE, ["up", "down"])
+# Arabalar (Tuşlar büyük harfli olmalı)
+araba1 = Araba(200, 500, RED, ["W", "S", "A", "D"])
+araba2 = Araba(400, 500, BLUE, ["UP", "DOWN", "LEFT", "RIGHT"])
 
 kazanan = None
 
@@ -37,24 +39,24 @@ kazanan = None
 running = True
 while running:
     screen.fill(WHITE)
-    # Engelleri çiz
-for engel in engeller:
-    engel.ciz(screen)
 
-    # Çarpışma kontrolü
-    if engel.carpti_mi(araba1):
-        print("Oyuncu 1 kaza yaptı!")
-        pygame.time.delay(2000)
-        pygame.quit()
-        sys.exit()
+    # Engelleri çiz ve çarpışma kontrolü yap
+    for engel in engeller:
+        engel.ciz(screen)
 
-    if engel.carpti_mi(araba2):
-        print("Oyuncu 2 kaza yaptı!")
-        pygame.time.delay(2000)
-        pygame.quit()
-        sys.exit()
+        if engel.carpti_mi(araba1):
+            print("Oyuncu 1 kaza yaptı!")
+            pygame.time.delay(2000)
+            pygame.quit()
+            sys.exit()
 
-    # Bitiş çizgisi çiz
+        if engel.carpti_mi(araba2):
+            print("Oyuncu 2 kaza yaptı!")
+            pygame.time.delay(2000)
+            pygame.quit()
+            sys.exit()
+
+    # Bitiş çizgisi
     pygame.draw.rect(screen, GREEN, (0, bitis_y, WIDTH, 10))
 
     # Olayları dinle
@@ -62,14 +64,15 @@ for engel in engeller:
         if event.type == pygame.QUIT:
             running = False
 
+    # Tuşları kontrol et
     keys = pygame.key.get_pressed()
-    araba1.hareket(keys)
-    araba2.hareket(keys)
+    araba1.hareketEt(keys, WIDTH, HEIGHT)
+    araba2.hareketEt(keys, WIDTH, HEIGHT)
 
     araba1.ciz(screen)
     araba2.ciz(screen)
 
-    # Kazanma kontrolü
+    # Kazanan kontrolü
     if araba1.y <= bitis_y and kazanan is None:
         kazanan = "Oyuncu 1"
     if araba2.y <= bitis_y and kazanan is None:
