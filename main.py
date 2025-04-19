@@ -54,7 +54,7 @@ dusmanlar = []
 patlamalar = []
 dusman_sayaci = 0
 
-# Can barı
+# ✅ CAN BAR
 def can_bari_ciz(ekran, can, max_can):
     oran = can / max_can
     bar_genislik = 120
@@ -78,6 +78,18 @@ def can_bari_ciz(ekran, can, max_can):
     yazi_rect = yazi.get_rect(center=(x + bar_genislik // 2, y + bar_yukseklik // 2))
     ekran.blit(yazi, yazi_rect)
 
+# ✅ R TUŞU İÇİN OYUNU SIFIRLA
+def oyunu_sifirla():
+    global ucak_rect, skor, can, oyun_bitti, mermiler, dusmanlar, patlamalar, dusman_sayaci
+    ucak_rect.midbottom = (GENISLIK // 2, YUKSEKLIK - 20)
+    skor = 0
+    can = max_can
+    oyun_bitti = False
+    mermiler.clear()
+    dusmanlar.clear()
+    patlamalar.clear()
+    dusman_sayaci = 0
+
 # Ana döngü
 calisiyor = True
 while calisiyor:
@@ -93,6 +105,8 @@ while calisiyor:
             elif etkinlik.key == pygame.K_SPACE and not oyun_bitti:
                 lazer_sesi.play()
                 mermiler.append(Mermi(ucak_rect.centerx, ucak_rect.top, mermi_resim_yolu))
+            elif etkinlik.key == pygame.K_r and oyun_bitti:
+                oyunu_sifirla()
 
     # Uçak hareketi
     if not oyun_bitti:
@@ -118,7 +132,7 @@ while calisiyor:
             x = random.randint(50, GENISLIK - 50)
             dusmanlar.append(Dusman(x, -40))
 
-    # Düşmanlar
+    # Düşman işlemleri
     for dusman in dusmanlar[:]:
         dusman.hareket_et()
 
@@ -152,16 +166,15 @@ while calisiyor:
         if patlama.bitti_mi():
             patlamalar.remove(patlama)
 
-    # Uçak çizimi
+    # Uçak ve arayüz
     ekran.blit(ucak_resim, ucak_rect)
-
-    # Skor ve can barı
     ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
     ekran.blit(font.render(f"En Yüksek Skor: {en_yuksek_skor}", True, (200, 200, 200)), (10, 40))
     can_bari_ciz(ekran, can, max_can)
 
     if oyun_bitti:
-        ekran.blit(font.render("GAME OVER", True, (255, 0, 0)), (GENISLIK // 2 - 80, YUKSEKLIK // 2))
+        ekran.blit(font.render("GAME OVER - R: Yeniden Başlat", True, (255, 0, 0)),
+                    (GENISLIK // 2 - 160, YUKSEKLIK // 2))
 
     pygame.display.update()
 
