@@ -6,6 +6,7 @@ from dusman_sinif import Dusman
 from patlama import Patlama
 from can_kutusu import CanKutusu
 from mermi_kutusu import MermiKutusu
+from boss_dusman import BossDusman
 
 pygame.init()
 GENISLIK, YUKSEKLIK = 800, 600
@@ -32,6 +33,9 @@ mermi_sayisi = 20
 max_mermi = 20
 mermi_kutulari = []
 mermi_kutu_sayaci = 0
+
+boss = None
+boss_aktif = False
 
 def en_yuksek_skoru_oku(dosya="skor.txt"):
     try:
@@ -81,7 +85,7 @@ def can_bari_ciz(ekran, can, max_can):
 def oyunu_sifirla():
     global ucak_rect, skor, can, oyun_bitti, mermiler, dusmanlar, patlamalar, can_kutulari
     global dusman_sayaci, can_kutu_sayaci, seviye, dusman_hiz_carpani
-    global mermi_sayisi, mermi_kutulari, mermi_kutu_sayaci
+    global mermi_sayisi, mermi_kutulari, mermi_kutu_sayaci, boss, boss_aktif
     ucak_rect.midbottom = (GENISLIK // 2, YUKSEKLIK - 20)
     skor = 0
     can = max_can
@@ -97,6 +101,8 @@ def oyunu_sifirla():
     mermi_sayisi = max_mermi
     mermi_kutulari.clear()
     mermi_kutu_sayaci = 0
+    boss = None
+    boss_aktif = False
 
 calisiyor = True
 while calisiyor:
@@ -134,6 +140,9 @@ while calisiyor:
     seviye = skor // 20 + 1
     if seviye != onceki_seviye:
         dusman_hiz_carpani += 0.2
+        if not boss_aktif:
+            boss = BossDusman(GENISLIK // 2, -80)
+            boss_aktif = True
 
     if not oyun_bitti:
         dusman_sayaci += 1
@@ -208,6 +217,22 @@ while calisiyor:
             mermi_kutulari.remove(mk)
         elif mk.ekran_disinda_mi(YUKSEKLIK):
             mermi_kutulari.remove(mk)
+
+    if boss:
+        boss.hareket_et()
+        boss.ciz(ekran)
+        for mermi in mermiler[:]:
+            if boss and boss.rect.colliderect(mermi.rect):
+                mermiler.remove(mermi)
+                boss.can -= 1
+                if boss.can <= 0:
+                    skor += 5
+                    boss = None
+                    boss_aktif = False
+        if boss and boss.ekran_disinda_mi(YUKSEKLIK):
+            boss = None
+            boss_aktif = False
+        ekran.blit(font.render("BOSS GELDİ!", True, (255, 0, 0)), (GENISLIK//2 - 60, 10))
 
     ekran.blit(ucak_resim, ucak_rect)
     ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
