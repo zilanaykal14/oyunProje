@@ -12,21 +12,21 @@ ekran = pygame.display.set_mode((GENISLIK, YUKSEKLIK))
 pygame.display.set_caption("Savaş Oyunu")
 clock = pygame.time.Clock()
 
-# Arka plan
 arka_plan = pygame.image.load("assets/arkaplan.png")
 arka_plan = pygame.transform.scale(arka_plan, (GENISLIK, YUKSEKLIK))
 
-# Ses
 lazer_sesi = pygame.mixer.Sound("assets/lazer_sesi.wav")
 lazer_sesi.set_volume(0.5)
 
-# Yazı tipi ve skorlar
 pygame.font.init()
 font = pygame.font.SysFont("Arial", 24)
 skor = 0
 can = 3
 max_can = 3
 oyun_bitti = False
+
+seviye = 1
+dusman_hiz_carpani = 1.0
 
 def en_yuksek_skoru_oku(dosya="skor.txt"):
     try:
@@ -41,14 +41,12 @@ def skoru_yaz(skor, dosya="skor.txt"):
 
 en_yuksek_skor = en_yuksek_skoru_oku()
 
-# Uçak
 ucak_resim = pygame.image.load("assets/ucak.png")
 ucak_resim = pygame.transform.rotate(ucak_resim, 90)
 ucak_rect = ucak_resim.get_rect()
 ucak_rect.midbottom = (GENISLIK // 2, YUKSEKLIK - 20)
 ucak_hiz = 5
 
-# Mermiler, düşmanlar, can kutuları
 mermi_resim_yolu = "assets/mermi.png"
 mermiler = []
 dusmanlar = []
@@ -57,7 +55,6 @@ can_kutulari = []
 dusman_sayaci = 0
 can_kutu_sayaci = 0
 
-# Can barı
 def can_bari_ciz(ekran, can, max_can):
     oran = can / max_can
     bar_genislik = 120
@@ -81,9 +78,12 @@ def can_bari_ciz(ekran, can, max_can):
     yazi_rect = yazi.get_rect(center=(x + bar_genislik // 2, y + bar_yukseklik // 2))
     ekran.blit(yazi, yazi_rect)
 
-# Oyunu sıfırla
 def oyunu_sifirla():
-    global ucak_rect, skor, can, oyun_bitti, mermiler, dusmanlar, patlamalar, dusman_sayaci, can_kutulari, can_kutu_sayaci
+    global ucak_rect, skor, can, oyun_bitti
+    global mermiler, dusmanlar, patlamalar, can_kutulari
+    global dusman_sayaci, can_kutu_sayaci
+    global seviye, dusman_hiz_carpani
+
     ucak_rect.midbottom = (GENISLIK // 2, YUKSEKLIK - 20)
     skor = 0
     can = max_can
@@ -94,12 +94,13 @@ def oyunu_sifirla():
     can_kutulari.clear()
     dusman_sayaci = 0
     can_kutu_sayaci = 0
+    seviye = 1
+    dusman_hiz_carpani = 1.0
 
-# Ana döngü
 calisiyor = True
 while calisiyor:
     clock.tick(60)
-    ekran.blit(arka_plan, (0, 0))  # Arka plan çizimi
+    ekran.blit(arka_plan, (0, 0))
 
     for etkinlik in pygame.event.get():
         if etkinlik.type == pygame.QUIT:
@@ -113,7 +114,6 @@ while calisiyor:
             elif etkinlik.key == pygame.K_r and oyun_bitti:
                 oyunu_sifirla()
 
-    # Uçak hareketi
     if not oyun_bitti:
         tuslar = pygame.key.get_pressed()
         if tuslar[pygame.K_LEFT] and ucak_rect.left > 0:
@@ -121,7 +121,6 @@ while calisiyor:
         if tuslar[pygame.K_RIGHT] and ucak_rect.right < GENISLIK:
             ucak_rect.x += ucak_hiz
 
-    # Mermiler
     for mermi in mermiler[:]:
         mermi.hareket_et()
         if mermi.ekran_disinda_mi():
@@ -129,13 +128,19 @@ while calisiyor:
         else:
             mermi.ciz(ekran)
 
+    # Seviye kontrol
+    onceki_seviye = seviye
+    seviye = skor // 20 + 1
+    if seviye != onceki_seviye:
+        dusman_hiz_carpani += 0.2
+
     # Düşman üretimi
     if not oyun_bitti:
         dusman_sayaci += 1
         if dusman_sayaci > 60:
             dusman_sayaci = 0
             x = random.randint(50, GENISLIK - 50)
-            dusmanlar.append(Dusman(x, -40))
+            dusmanlar.append(Dusman(x, -40, hiz_carpani=dusman_hiz_carpani))
 
     # Can kutusu üretimi
     if not oyun_bitti:
@@ -145,10 +150,8 @@ while calisiyor:
             x = random.randint(50, GENISLIK - 50)
             can_kutulari.append(CanKutusu(x, -30))
 
-    # Düşman işlemleri
     for dusman in dusmanlar[:]:
         dusman.hareket_et()
-
         for mermi in mermiler[:]:
             if dusman.rect.colliderect(mermi.rect):
                 dusmanlar.remove(dusman)
@@ -156,7 +159,6 @@ while calisiyor:
                 skor += 1
                 patlamalar.append(Patlama(dusman.rect.centerx, dusman.rect.centery))
                 break
-
         if dusman.rect.colliderect(ucak_rect):
             dusmanlar.remove(dusman)
             can -= 1
@@ -166,24 +168,20 @@ while calisiyor:
                     skoru_yaz(skor)
                     en_yuksek_skor = skor
             continue
-
         if dusman.ekran_disinda_mi(YUKSEKLIK):
             dusmanlar.remove(dusman)
         else:
             dusman.ciz(ekran)
 
-    # Patlamalar
     for patlama in patlamalar[:]:
         patlama.guncelle()
         patlama.ciz(ekran)
         if patlama.bitti_mi():
             patlamalar.remove(patlama)
 
-    # Can kutuları
     for kutu in can_kutulari[:]:
         kutu.hareket_et()
         kutu.ciz(ekran)
-
         vuruldu = False
         for mermi in mermiler[:]:
             if kutu.rect.colliderect(mermi.rect):
@@ -193,14 +191,13 @@ while calisiyor:
                 mermiler.remove(mermi)
                 vuruldu = True
                 break
-
         if not vuruldu and kutu.ekran_disinda_mi(YUKSEKLIK):
             can_kutulari.remove(kutu)
 
-    # Arayüz
     ekran.blit(ucak_resim, ucak_rect)
     ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
     ekran.blit(font.render(f"En Yüksek Skor: {en_yuksek_skor}", True, (200, 200, 200)), (10, 40))
+    ekran.blit(font.render(f"Seviye: {seviye}", True, (255, 255, 0)), (10, 70))
     can_bari_ciz(ekran, can, max_can)
 
     if oyun_bitti:

@@ -5,11 +5,6 @@ import os
 class Dusman:
     sprite_boyut = 32
     tum_sprite_lar = []
-    hizlar = {
-        "normal": 3,
-        "hizli": 5,
-        "rastgele": random.randint(2, 6)  # Rastgele hız
-    }
 
     @classmethod
     def sprite_yukle(cls):
@@ -37,13 +32,13 @@ class Dusman:
 
         return sprite_liste
 
-    def __init__(self, x, y, tur="normal"):
-        self.rect = pygame.Rect(x, y, self.sprite_boyut, self.sprite_boyut)
-        self.hiz = Dusman.hizlar.get(tur, Dusman.hizlar["normal"])  # Türe göre hız
-        if isinstance(self.hiz, str):  # Eğer hız string olarak gelirse
-            self.hiz = int(self.hiz)  # Sayıya dönüştür
-        self.sprite_yukle()
-        self.gorsel = random.choice(self.tum_sprite_lar)
+    def __init__(self, x, y, tur="normal", hiz_carpani=1.0):
+     self.rect = pygame.Rect(x, y, self.sprite_boyut, self.sprite_boyut)
+     self.tur = tur
+     self.hiz = 3 * hiz_carpani
+     self.sprite_yukle()
+     self.gorsel = random.choice(self.tum_sprite_lar)
+
 
     def hareket_et(self):
         self.rect.y += self.hiz
