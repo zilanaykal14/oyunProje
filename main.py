@@ -21,6 +21,9 @@ arka_plan = pygame.transform.scale(arka_plan, (GENISLIK, YUKSEKLIK))
 lazer_sesi = pygame.mixer.Sound("assets/lazer_sesi.wav")
 lazer_sesi.set_volume(0.5)
 
+boss_vurulma_sesi = pygame.mixer.Sound("assets/boss_patlama.wav")
+boss_vurulma_sesi.set_volume(0.7)
+
 pygame.font.init()
 font = pygame.font.SysFont("Arial", 24)
 skor = 0
@@ -40,7 +43,7 @@ boss_aktif = False
 meteorlar = [Meteor(GENISLIK) for _ in range(20)]
 
 sarsinti_suresi = 0
-max_sarsinti_suresi = 15  # Ekranın ne kadar süre sarsılacağını belirler (FPS cinsinden)
+max_sarsinti_suresi = 15
 
 def en_yuksek_skoru_oku(dosya="skor.txt"):
     try:
@@ -87,6 +90,9 @@ def can_bari_ciz(ekran, can, max_can):
     yazi = font.render(f"Can: {can}/{max_can}", True, (255, 255, 255))
     ekran.blit(yazi, (x, y - 25))
 
+def sarsinti_efekti():
+    return random.randint(-5, 5), random.randint(-5, 5)
+
 def oyunu_sifirla():
     global ucak_rect, skor, can, oyun_bitti, mermiler, dusmanlar, patlamalar, can_kutulari
     global dusman_sayaci, can_kutu_sayaci, seviye, dusman_hiz_carpani
@@ -110,21 +116,15 @@ def oyunu_sifirla():
     boss_aktif = False
     meteorlar = [Meteor(GENISLIK) for _ in range(20)]
 
-def sarsinti_efekti():
-    """Ekranın rastgele kaydırılmasını sağlar."""
-    x_sarsinti = random.randint(-5, 5)
-    y_sarsinti = random.randint(-5, 5)
-    return x_sarsinti, y_sarsinti
-
 calisiyor = True
 while calisiyor:
     clock.tick(60)
     if sarsinti_suresi > 0:
-        sarsinti_x, sarsinti_y = sarsinti_efekti()
-        ekran.blit(arka_plan, (sarsinti_x, sarsinti_y))  # Arka planı kaydır
-        sarsinti_suresi -= 1  # Sarsıntı süresi azalır
+        sx, sy = sarsinti_efekti()
+        ekran.blit(arka_plan, (sx, sy))
+        sarsinti_suresi -= 1
     else:
-        ekran.blit(arka_plan, (0, 0))  # Arka planı normal şekilde yerleştir
+        ekran.blit(arka_plan, (0, 0))
 
     for meteor in meteorlar:
         meteor.hareket_et()
@@ -198,17 +198,13 @@ while calisiyor:
         if dusman.rect.colliderect(ucak_rect):
             dusmanlar.remove(dusman)
             can -= 1
-            
-            # Ekranın sarsılması için
             sarsinti_suresi = max_sarsinti_suresi
-
             if can <= 0:
                 oyun_bitti = True
                 if skor > en_yuksek_skor:
                     skoru_yaz(skor)
                     en_yuksek_skor = skor
-            continue
-        if dusman.ekran_disinda_mi(YUKSEKLIK):
+        elif dusman.ekran_disinda_mi(YUKSEKLIK):
             dusmanlar.remove(dusman)
         else:
             dusman.ciz(ekran)
@@ -222,17 +218,15 @@ while calisiyor:
     for kutu in can_kutulari[:]:
         kutu.hareket_et()
         kutu.ciz(ekran)
-        vuruldu = False
         for mermi in mermiler[:]:
             if kutu.rect.colliderect(mermi.rect):
                 if can < max_can:
                     can += 1
                 can_kutulari.remove(kutu)
                 mermiler.remove(mermi)
-                vuruldu = True
                 break
-        if not vuruldu and kutu.ekran_disinda_mi(YUKSEKLIK):
-            can_kutulari.remove(kutu)
+            elif kutu.ekran_disinda_mi(YUKSEKLIK):
+              can_kutulari.remove(kutu)
 
     for mk in mermi_kutulari[:]:
         mk.hareket_et()
@@ -250,6 +244,7 @@ while calisiyor:
             if boss and boss.rect.colliderect(mermi.rect):
                 mermiler.remove(mermi)
                 boss.can -= 1
+                boss_vurulma_sesi.play()
                 if boss.can <= 0:
                     skor += 5
                     boss = None
@@ -257,7 +252,7 @@ while calisiyor:
         if boss and boss.ekran_disinda_mi(YUKSEKLIK):
             boss = None
             boss_aktif = False
-        ekran.blit(font.render("BOSS GELDİ!", True, (255, 0, 0)), (GENISLIK//2 - 60, 10))
+        ekran.blit(font.render("BOSS GELDİ!", True, (255, 0, 0)), (GENISLIK // 2 - 60, 10))
 
     ekran.blit(ucak_resim, ucak_rect)
     ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
