@@ -39,6 +39,9 @@ boss = None
 boss_aktif = False
 meteorlar = [Meteor(GENISLIK) for _ in range(20)]
 
+sarsinti_suresi = 0
+max_sarsinti_suresi = 15  # Ekranın ne kadar süre sarsılacağını belirler (FPS cinsinden)
+
 def en_yuksek_skoru_oku(dosya="skor.txt"):
     try:
         with open(dosya, "r") as f:
@@ -107,10 +110,21 @@ def oyunu_sifirla():
     boss_aktif = False
     meteorlar = [Meteor(GENISLIK) for _ in range(20)]
 
+def sarsinti_efekti():
+    """Ekranın rastgele kaydırılmasını sağlar."""
+    x_sarsinti = random.randint(-5, 5)
+    y_sarsinti = random.randint(-5, 5)
+    return x_sarsinti, y_sarsinti
+
 calisiyor = True
 while calisiyor:
     clock.tick(60)
-    ekran.blit(arka_plan, (0, 0))
+    if sarsinti_suresi > 0:
+        sarsinti_x, sarsinti_y = sarsinti_efekti()
+        ekran.blit(arka_plan, (sarsinti_x, sarsinti_y))  # Arka planı kaydır
+        sarsinti_suresi -= 1  # Sarsıntı süresi azalır
+    else:
+        ekran.blit(arka_plan, (0, 0))  # Arka planı normal şekilde yerleştir
 
     for meteor in meteorlar:
         meteor.hareket_et()
@@ -184,6 +198,10 @@ while calisiyor:
         if dusman.rect.colliderect(ucak_rect):
             dusmanlar.remove(dusman)
             can -= 1
+            
+            # Ekranın sarsılması için
+            sarsinti_suresi = max_sarsinti_suresi
+
             if can <= 0:
                 oyun_bitti = True
                 if skor > en_yuksek_skor:
