@@ -4,12 +4,18 @@ import random
 from mermi import Mermi
 from dusman_sinif import Dusman
 
+# Başlat
 pygame.init()
 GENISLIK, YUKSEKLIK = 800, 600
 ekran = pygame.display.set_mode((GENISLIK, YUKSEKLIK))
 pygame.display.set_caption("Savaş Oyunu")
 clock = pygame.time.Clock()
 
+# Ses yükleme
+lazer_sesi = pygame.mixer.Sound("assets/lazer_sesi.wav")
+lazer_sesi.set_volume(0.5)  # Ses seviyesi (0.0 - 1.0)
+
+# Yazı tipi ve skorlar
 pygame.font.init()
 font = pygame.font.SysFont("Arial", 24)
 skor = 0
@@ -17,6 +23,7 @@ can = 3
 max_can = 3
 oyun_bitti = False
 
+# Yüksek skor işlemleri
 def en_yuksek_skoru_oku(dosya="skor.txt"):
     try:
         with open(dosya, "r") as f:
@@ -37,11 +44,15 @@ ucak_rect = ucak_resim.get_rect()
 ucak_rect.midbottom = (GENISLIK // 2, YUKSEKLIK - 20)
 ucak_hiz = 5
 
+# Mermi resmi yolu
+mermi_resim_yolu = "assets/mermi.png"
+
+# Listeler
 mermiler = []
 dusmanlar = []
 dusman_sayaci = 0
 
-# ✅ MODERN CAN BARI
+# ✅ Modern can barı
 def can_bari_ciz(ekran, can, max_can):
     oran = can / max_can
     bar_genislik = 120
@@ -79,7 +90,8 @@ while calisiyor:
             if etkinlik.key == pygame.K_ESCAPE:
                 calisiyor = False
             elif etkinlik.key == pygame.K_SPACE and not oyun_bitti:
-                mermiler.append(Mermi(ucak_rect.centerx, ucak_rect.top))
+                lazer_sesi.play()  # Mermi sesi çal
+                mermiler.append(Mermi(ucak_rect.centerx, ucak_rect.top, mermi_resim_yolu))
 
     # Uçak hareketi
     if not oyun_bitti:
@@ -97,7 +109,7 @@ while calisiyor:
         else:
             mermi.ciz(ekran)
 
-    # Düşman üret
+    # Düşman üretimi
     if not oyun_bitti:
         dusman_sayaci += 1
         if dusman_sayaci > 60:
@@ -134,7 +146,7 @@ while calisiyor:
     # Uçak çizimi
     ekran.blit(ucak_resim, ucak_rect)
 
-    # Skor ve can barı çizimleri
+    # Skor ve can barı çizimi
     ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
     ekran.blit(font.render(f"En Yüksek Skor: {en_yuksek_skor}", True, (200, 200, 200)), (10, 40))
     can_bari_ciz(ekran, can, max_can)
