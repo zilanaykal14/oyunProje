@@ -7,6 +7,7 @@ from patlama import Patlama
 from can_kutusu import CanKutusu
 from mermi_kutusu import MermiKutusu
 from boss_dusman import BossDusman
+from meteor import Meteor
 
 pygame.init()
 GENISLIK, YUKSEKLIK = 800, 600
@@ -36,6 +37,7 @@ mermi_kutu_sayaci = 0
 
 boss = None
 boss_aktif = False
+meteorlar = [Meteor(GENISLIK) for _ in range(20)]
 
 def en_yuksek_skoru_oku(dosya="skor.txt"):
     try:
@@ -85,7 +87,7 @@ def can_bari_ciz(ekran, can, max_can):
 def oyunu_sifirla():
     global ucak_rect, skor, can, oyun_bitti, mermiler, dusmanlar, patlamalar, can_kutulari
     global dusman_sayaci, can_kutu_sayaci, seviye, dusman_hiz_carpani
-    global mermi_sayisi, mermi_kutulari, mermi_kutu_sayaci, boss, boss_aktif
+    global mermi_sayisi, mermi_kutulari, mermi_kutu_sayaci, boss, boss_aktif, meteorlar
     ucak_rect.midbottom = (GENISLIK // 2, YUKSEKLIK - 20)
     skor = 0
     can = max_can
@@ -103,11 +105,16 @@ def oyunu_sifirla():
     mermi_kutu_sayaci = 0
     boss = None
     boss_aktif = False
+    meteorlar = [Meteor(GENISLIK) for _ in range(20)]
 
 calisiyor = True
 while calisiyor:
     clock.tick(60)
     ekran.blit(arka_plan, (0, 0))
+
+    for meteor in meteorlar:
+        meteor.hareket_et()
+        meteor.ciz(ekran)
 
     for etkinlik in pygame.event.get():
         if etkinlik.type == pygame.QUIT:
