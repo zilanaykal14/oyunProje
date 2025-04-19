@@ -5,6 +5,7 @@ from mermi import Mermi
 from dusman_sinif import Dusman
 from patlama import Patlama
 from can_kutusu import CanKutusu
+from mermi_kutusu import MermiKutusu
 
 pygame.init()
 GENISLIK, YUKSEKLIK = 800, 600
@@ -27,6 +28,10 @@ oyun_bitti = False
 
 seviye = 1
 dusman_hiz_carpani = 1.0
+mermi_sayisi = 20
+max_mermi = 20
+mermi_kutulari = []
+mermi_kutu_sayaci = 0
 
 def en_yuksek_skoru_oku(dosya="skor.txt"):
     try:
@@ -61,29 +66,22 @@ def can_bari_ciz(ekran, can, max_can):
     bar_yukseklik = 20
     x = GENISLIK - bar_genislik - 20
     y = 20
-
     pygame.draw.rect(ekran, (60, 60, 60), (x, y, bar_genislik, bar_yukseklik), border_radius=10)
-
     if oran > 0.5:
         renk = (0, 220, 0)
     elif oran > 0.25:
         renk = (255, 165, 0)
     else:
         renk = (255, 50, 50)
-
     dolu_genislik = int(bar_genislik * oran)
     pygame.draw.rect(ekran, renk, (x, y, dolu_genislik, bar_yukseklik), border_radius=10)
-
     yazi = font.render(f"Can: {can}/{max_can}", True, (255, 255, 255))
-    yazi_rect = yazi.get_rect(center=(x + bar_genislik // 2, y + bar_yukseklik // 2))
-    ekran.blit(yazi, yazi_rect)
+    ekran.blit(yazi, (x, y - 25))
 
 def oyunu_sifirla():
-    global ucak_rect, skor, can, oyun_bitti
-    global mermiler, dusmanlar, patlamalar, can_kutulari
-    global dusman_sayaci, can_kutu_sayaci
-    global seviye, dusman_hiz_carpani
-
+    global ucak_rect, skor, can, oyun_bitti, mermiler, dusmanlar, patlamalar, can_kutulari
+    global dusman_sayaci, can_kutu_sayaci, seviye, dusman_hiz_carpani
+    global mermi_sayisi, mermi_kutulari, mermi_kutu_sayaci
     ucak_rect.midbottom = (GENISLIK // 2, YUKSEKLIK - 20)
     skor = 0
     can = max_can
@@ -96,6 +94,9 @@ def oyunu_sifirla():
     can_kutu_sayaci = 0
     seviye = 1
     dusman_hiz_carpani = 1.0
+    mermi_sayisi = max_mermi
+    mermi_kutulari.clear()
+    mermi_kutu_sayaci = 0
 
 calisiyor = True
 while calisiyor:
@@ -108,9 +109,10 @@ while calisiyor:
         elif etkinlik.type == pygame.KEYDOWN:
             if etkinlik.key == pygame.K_ESCAPE:
                 calisiyor = False
-            elif etkinlik.key == pygame.K_SPACE and not oyun_bitti:
+            elif etkinlik.key == pygame.K_SPACE and not oyun_bitti and mermi_sayisi > 0:
                 lazer_sesi.play()
                 mermiler.append(Mermi(ucak_rect.centerx, ucak_rect.top, mermi_resim_yolu))
+                mermi_sayisi -= 1
             elif etkinlik.key == pygame.K_r and oyun_bitti:
                 oyunu_sifirla()
 
@@ -128,13 +130,11 @@ while calisiyor:
         else:
             mermi.ciz(ekran)
 
-    # Seviye kontrol
     onceki_seviye = seviye
     seviye = skor // 20 + 1
     if seviye != onceki_seviye:
         dusman_hiz_carpani += 0.2
 
-    # Düşman üretimi
     if not oyun_bitti:
         dusman_sayaci += 1
         if dusman_sayaci > 60:
@@ -142,13 +142,19 @@ while calisiyor:
             x = random.randint(50, GENISLIK - 50)
             dusmanlar.append(Dusman(x, -40, hiz_carpani=dusman_hiz_carpani))
 
-    # Can kutusu üretimi
     if not oyun_bitti:
         can_kutu_sayaci += 1
         if can_kutu_sayaci > 300:
             can_kutu_sayaci = 0
             x = random.randint(50, GENISLIK - 50)
             can_kutulari.append(CanKutusu(x, -30))
+
+    if not oyun_bitti:
+        mermi_kutu_sayaci += 1
+        if mermi_kutu_sayaci > 500:
+            mermi_kutu_sayaci = 0
+            x = random.randint(50, GENISLIK - 50)
+            mermi_kutulari.append(MermiKutusu(x, -30))
 
     for dusman in dusmanlar[:]:
         dusman.hareket_et()
@@ -194,10 +200,20 @@ while calisiyor:
         if not vuruldu and kutu.ekran_disinda_mi(YUKSEKLIK):
             can_kutulari.remove(kutu)
 
+    for mk in mermi_kutulari[:]:
+        mk.hareket_et()
+        mk.ciz(ekran)
+        if mk.rect.colliderect(ucak_rect):
+            mermi_sayisi = min(max_mermi, mermi_sayisi + 10)
+            mermi_kutulari.remove(mk)
+        elif mk.ekran_disinda_mi(YUKSEKLIK):
+            mermi_kutulari.remove(mk)
+
     ekran.blit(ucak_resim, ucak_rect)
     ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
     ekran.blit(font.render(f"En Yüksek Skor: {en_yuksek_skor}", True, (200, 200, 200)), (10, 40))
     ekran.blit(font.render(f"Seviye: {seviye}", True, (255, 255, 0)), (10, 70))
+    ekran.blit(font.render(f"Mermi: {mermi_sayisi}/{max_mermi}", True, (0, 200, 255)), (10, 100))
     can_bari_ciz(ekran, can, max_can)
 
     if oyun_bitti:
