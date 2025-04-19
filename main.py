@@ -4,13 +4,17 @@ import random
 from mermi import Mermi
 from dusman_sinif import Dusman
 from patlama import Patlama
-from can_kutusu import CanKutusu  # ⭐ YILDIZ CAN KUTUSU
+from can_kutusu import CanKutusu
 
 pygame.init()
 GENISLIK, YUKSEKLIK = 800, 600
 ekran = pygame.display.set_mode((GENISLIK, YUKSEKLIK))
 pygame.display.set_caption("Savaş Oyunu")
 clock = pygame.time.Clock()
+
+# Arka plan
+arka_plan = pygame.image.load("assets/arkaplan.png")
+arka_plan = pygame.transform.scale(arka_plan, (GENISLIK, YUKSEKLIK))
 
 # Ses
 lazer_sesi = pygame.mixer.Sound("assets/lazer_sesi.wav")
@@ -95,7 +99,7 @@ def oyunu_sifirla():
 calisiyor = True
 while calisiyor:
     clock.tick(60)
-    ekran.fill((10, 10, 30))
+    ekran.blit(arka_plan, (0, 0))  # Arka plan çizimi
 
     for etkinlik in pygame.event.get():
         if etkinlik.type == pygame.QUIT:
@@ -133,10 +137,10 @@ while calisiyor:
             x = random.randint(50, GENISLIK - 50)
             dusmanlar.append(Dusman(x, -40))
 
-    # Can kutusu üretimi (yıldız)
+    # Can kutusu üretimi
     if not oyun_bitti:
         can_kutu_sayaci += 1
-        if can_kutu_sayaci > 300:  # ~ 5 saniyede bir yıldız düşer
+        if can_kutu_sayaci > 300:
             can_kutu_sayaci = 0
             x = random.randint(50, GENISLIK - 50)
             can_kutulari.append(CanKutusu(x, -30))
@@ -175,7 +179,7 @@ while calisiyor:
         if patlama.bitti_mi():
             patlamalar.remove(patlama)
 
-    # Can kutuları (yıldızlar)
+    # Can kutuları
     for kutu in can_kutulari[:]:
         kutu.hareket_et()
         kutu.ciz(ekran)
@@ -193,7 +197,7 @@ while calisiyor:
         if not vuruldu and kutu.ekran_disinda_mi(YUKSEKLIK):
             can_kutulari.remove(kutu)
 
-    # Uçak ve arayüz
+    # Arayüz
     ekran.blit(ucak_resim, ucak_rect)
     ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
     ekran.blit(font.render(f"En Yüksek Skor: {en_yuksek_skor}", True, (200, 200, 200)), (10, 40))
