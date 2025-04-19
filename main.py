@@ -3,6 +3,7 @@ import sys
 import random
 from mermi import Mermi
 from dusman_sinif import Dusman
+from patlama import Patlama
 
 # Başlat
 pygame.init()
@@ -13,7 +14,7 @@ clock = pygame.time.Clock()
 
 # Ses yükleme
 lazer_sesi = pygame.mixer.Sound("assets/lazer_sesi.wav")
-lazer_sesi.set_volume(0.5)  # Ses seviyesi (0.0 - 1.0)
+lazer_sesi.set_volume(0.5)
 
 # Yazı tipi ve skorlar
 pygame.font.init()
@@ -50,9 +51,10 @@ mermi_resim_yolu = "assets/mermi.png"
 # Listeler
 mermiler = []
 dusmanlar = []
+patlamalar = []
 dusman_sayaci = 0
 
-# ✅ Modern can barı
+# Can barı
 def can_bari_ciz(ekran, can, max_can):
     oran = can / max_can
     bar_genislik = 120
@@ -72,7 +74,6 @@ def can_bari_ciz(ekran, can, max_can):
     dolu_genislik = int(bar_genislik * oran)
     pygame.draw.rect(ekran, renk, (x, y, dolu_genislik, bar_yukseklik), border_radius=10)
 
-    # Yazı ortalanmış
     yazi = font.render(f"Can: {can}/{max_can}", True, (255, 255, 255))
     yazi_rect = yazi.get_rect(center=(x + bar_genislik // 2, y + bar_yukseklik // 2))
     ekran.blit(yazi, yazi_rect)
@@ -90,7 +91,7 @@ while calisiyor:
             if etkinlik.key == pygame.K_ESCAPE:
                 calisiyor = False
             elif etkinlik.key == pygame.K_SPACE and not oyun_bitti:
-                lazer_sesi.play()  # Mermi sesi çal
+                lazer_sesi.play()
                 mermiler.append(Mermi(ucak_rect.centerx, ucak_rect.top, mermi_resim_yolu))
 
     # Uçak hareketi
@@ -117,7 +118,7 @@ while calisiyor:
             x = random.randint(50, GENISLIK - 50)
             dusmanlar.append(Dusman(x, -40))
 
-    # Düşman işlemleri
+    # Düşmanlar
     for dusman in dusmanlar[:]:
         dusman.hareket_et()
 
@@ -126,6 +127,7 @@ while calisiyor:
                 dusmanlar.remove(dusman)
                 mermiler.remove(mermi)
                 skor += 1
+                patlamalar.append(Patlama(dusman.rect.centerx, dusman.rect.centery))
                 break
 
         if dusman.rect.colliderect(ucak_rect):
@@ -143,10 +145,17 @@ while calisiyor:
         else:
             dusman.ciz(ekran)
 
+    # Patlamalar
+    for patlama in patlamalar[:]:
+        patlama.guncelle()
+        patlama.ciz(ekran)
+        if patlama.bitti_mi():
+            patlamalar.remove(patlama)
+
     # Uçak çizimi
     ekran.blit(ucak_resim, ucak_rect)
 
-    # Skor ve can barı çizimi
+    # Skor ve can barı
     ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
     ekran.blit(font.render(f"En Yüksek Skor: {en_yuksek_skor}", True, (200, 200, 200)), (10, 40))
     can_bari_ciz(ekran, can, max_can)
