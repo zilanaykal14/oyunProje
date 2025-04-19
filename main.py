@@ -11,6 +11,13 @@ ekran = pygame.display.set_mode((GENISLIK, YUKSEKLIK))
 pygame.display.set_caption("Savaş Oyunu")
 clock = pygame.time.Clock()
 
+# Yazı tipi, skor ve can
+pygame.font.init()
+font = pygame.font.SysFont("Arial", 24)
+skor = 0
+can = 3
+oyun_bitti = False
+
 # Uçak resmi
 ucak_resim = pygame.image.load("assets/ucak.png")
 ucak_resim = pygame.transform.rotate(ucak_resim, 90)
@@ -35,17 +42,18 @@ while calisiyor:
         elif etkinlik.type == pygame.KEYDOWN:
             if etkinlik.key == pygame.K_ESCAPE:
                 calisiyor = False
-            elif etkinlik.key == pygame.K_SPACE:
+            elif etkinlik.key == pygame.K_SPACE and not oyun_bitti:
                 mermiler.append(Mermi(ucak_rect.centerx, ucak_rect.top))
 
     # Uçak hareket
-    tuslar = pygame.key.get_pressed()
-    if tuslar[pygame.K_LEFT] and ucak_rect.left > 0:
-        ucak_rect.x -= ucak_hiz
-    if tuslar[pygame.K_RIGHT] and ucak_rect.right < GENISLIK:
-        ucak_rect.x += ucak_hiz
+    if not oyun_bitti:
+        tuslar = pygame.key.get_pressed()
+        if tuslar[pygame.K_LEFT] and ucak_rect.left > 0:
+            ucak_rect.x -= ucak_hiz
+        if tuslar[pygame.K_RIGHT] and ucak_rect.right < GENISLIK:
+            ucak_rect.x += ucak_hiz
 
-    # Mermi güncelle
+    # Mermiler
     for mermi in mermiler[:]:
         mermi.hareket_et()
         if mermi.ekran_disinda_mi():
@@ -54,30 +62,49 @@ while calisiyor:
             mermi.ciz(ekran)
 
     # Düşman üret
-    dusman_sayaci += 1
-    if dusman_sayaci > 60:
-        dusman_sayaci = 0
-        x = random.randint(50, GENISLIK - 50)
-        dusmanlar.append(Dusman(x, -40))
+    if not oyun_bitti:
+        dusman_sayaci += 1
+        if dusman_sayaci > 60:
+            dusman_sayaci = 0
+            x = random.randint(50, GENISLIK - 50)
+            dusmanlar.append(Dusman(x, -40))
 
-    # Düşman güncelle + çarpışma kontrolü
+    # Düşmanlar
     for dusman in dusmanlar[:]:
         dusman.hareket_et()
 
-        # Çarpışma kontrolü
+        # Mermi ile çarpışma
         for mermi in mermiler[:]:
             if dusman.rect.colliderect(mermi.rect):
                 dusmanlar.remove(dusman)
                 mermiler.remove(mermi)
-                break  # Aynı düşmana birden fazla çarpmasın
+                skor += 1
+                break
 
+        # Uçak ile çarpışma
+        if dusman.rect.colliderect(ucak_rect):
+            dusmanlar.remove(dusman)
+            can -= 1
+            if can <= 0:
+                oyun_bitti = True
+            continue
+
+        # Dışarı çıktıysa sil
         if dusman.ekran_disinda_mi(YUKSEKLIK):
             dusmanlar.remove(dusman)
         else:
             dusman.ciz(ekran)
 
-    # Uçağı çiz
+    # Uçak
     ekran.blit(ucak_resim, ucak_rect)
+
+    # Skor ve can
+    ekran.blit(font.render(f"Skor: {skor}", True, (255, 255, 255)), (10, 10))
+    ekran.blit(font.render(f"Can: {can}", True, (255, 100, 100)), (10, 40))
+
+    # Game Over
+    if oyun_bitti:
+        ekran.blit(font.render("GAME OVER", True, (255, 0, 0)), (GENISLIK // 2 - 80, YUKSEKLIK // 2))
 
     pygame.display.update()
 
