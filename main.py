@@ -33,6 +33,84 @@ seviye = 1
 dusman_hiz_carpani = 1.0
 mermi_sayisi = 20
 max_mermi = 20
+zorluk = "Orta"
+secili_secenek = 0
+menu_aktif = True
+
+def menu_goster():
+    global secili_secenek, menu_aktif, calisiyor
+    baslik_font = pygame.font.SysFont("Arial", 40, bold=True)
+    secenek_font = pygame.font.SysFont("Arial", 30)
+    secenekler = ["Oyuna Başla", "Ayarlar", "Çıkış"]
+    while menu_aktif:
+        ekran.fill((0, 0, 20))
+        ekran.blit(baslik_font.render("SAVAŞ OYUNU", True, (255, 255, 0)), (GENISLIK // 2 - 120, 100))
+        for i, secenek in enumerate(secenekler):
+            renk = (255, 255, 255) if i != secili_secenek else (0, 255, 0)
+            ekran.blit(secenek_font.render(secenek, True, renk), (GENISLIK // 2 - 100, 200 + i * 50))
+        pygame.display.update()
+        for etkinlik in pygame.event.get():
+            if etkinlik.type == pygame.QUIT:
+                menu_aktif = False
+                calisiyor = False
+            elif etkinlik.type == pygame.KEYDOWN:
+                if etkinlik.key == pygame.K_UP:
+                    secili_secenek = (secili_secenek - 1) % len(secenekler)
+                elif etkinlik.key == pygame.K_DOWN:
+                    secili_secenek = (secili_secenek + 1) % len(secenekler)
+                elif etkinlik.key == pygame.K_RETURN:
+                    if secili_secenek == 0:
+                        menu_aktif = False
+                    elif secili_secenek == 1:
+                        ayarlar_menusu()
+                    elif secili_secenek == 2:
+                        menu_aktif = False
+                        calisiyor = False
+
+def ayarlar_menusu():
+    global zorluk
+    font_menu = pygame.font.SysFont("Arial", 30)
+    baslik_font = pygame.font.SysFont("Arial", 36, bold=True)
+    zorluklar = ["Kolay", "Orta", "Zor"]
+    secili = zorluklar.index(zorluk)
+    aktif = True
+    while aktif:
+        ekran.fill((0, 0, 30))
+        ekran.blit(baslik_font.render("Ayarlar", True, (255, 255, 0)), (GENISLIK // 2 - 60, 80))
+        ekran.blit(font_menu.render("Zorluk Seviyesi:", True, (255, 255, 255)), (GENISLIK // 2 - 100, 160))
+        for i, secenek in enumerate(zorluklar):
+            renk = (0, 255, 0) if i == secili else (255, 255, 255)
+            ekran.blit(font_menu.render(secenek, True, renk), (GENISLIK // 2 - 40, 200 + i * 40))
+        ekran.blit(font_menu.render("ESC: Geri Dön", True, (200, 200, 200)), (GENISLIK // 2 - 80, 380))
+        pygame.display.update()
+        for etkinlik in pygame.event.get():
+            if etkinlik.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif etkinlik.type == pygame.KEYDOWN:
+                if etkinlik.key == pygame.K_ESCAPE:
+                    aktif = False
+                elif etkinlik.key == pygame.K_UP:
+                    secili = (secili - 1) % len(zorluklar)
+                elif etkinlik.key == pygame.K_DOWN:
+                    secili = (secili + 1) % len(zorluklar)
+                elif etkinlik.key == pygame.K_RETURN:
+                    zorluk = zorluklar[secili]
+                    aktif = False
+
+calisiyor = True
+menu_goster()
+if not calisiyor:
+    pygame.quit()
+    sys.exit()
+
+if zorluk == "Kolay":
+    dusman_hiz_carpani = 0.8
+elif zorluk == "Orta":
+    dusman_hiz_carpani = 1.0
+else:
+    dusman_hiz_carpani = 1.5
+
 
 mermiler, dusmanlar, patlamalar = [], [], []
 can_kutulari, mermi_kutulari, yavaslatma_kutulari = [], [], []
@@ -270,4 +348,4 @@ while calisiyor:
     pygame.display.update()
 
 pygame.quit()
-sys.exit() 
+sys.exit()
