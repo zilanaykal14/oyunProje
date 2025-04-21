@@ -16,8 +16,8 @@ class Meteor:
             (180, 150, 255)   # mor
         ])
 
-    def hareket_et(self):
-        self.y += self.hiz_y
+    def hareket_et(self, carpan=1.0):  # ✅ yavaşlatma çarpanı eklendi
+        self.y += self.hiz_y * carpan
         if self.y > 600:
             self.y = random.randint(-600, -50)
             self.x = random.randint(0, 800)

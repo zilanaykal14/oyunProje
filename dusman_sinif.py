@@ -38,8 +38,8 @@ class Dusman:
         self.sprite_yukle()
         self.gorsel = random.choice(self.tum_sprite_lar)
 
-    def hareket_et(self):
-        self.rect.y += self.hiz
+    def hareket_et(self, carpan=1.0):  # ✅ carpan eklendi
+        self.rect.y += int(self.hiz * carpan)
 
     def ciz(self, ekran):
         ekran.blit(self.gorsel, self.rect.topleft)

@@ -1,21 +1,25 @@
-import pygame  # pygame modülünü import etmelisiniz
+import pygame
 
 class Mermi:
     def __init__(self, x, y, resim_yolu):
-        # Mermi görselini yükle
+        # Mermi görselini yükle ve boyutlandır
         self.gorsel = pygame.image.load(resim_yolu)
-        self.gorsel = pygame.transform.scale(self.gorsel, (40, 40))  # Boyutları küçült
-
-        # Rect nesnesi oluşturuyoruz
+        self.gorsel = pygame.transform.scale(self.gorsel, (40, 40))
+        
+        # Rect nesnesi: mermiyi ekran üstünde konumlandırmak için
         self.rect = self.gorsel.get_rect(center=(x, y))
+        
+        # Mermi hızı (negatif çünkü yukarı gidecek)
+        self.hiz = -10
 
-        self.hiz = -10  # Merminin hareket hızı
-
-    def hareket_et(self):
-        self.rect.y += self.hiz  # Y ekseninde hareket ettir
+    def hareket_et(self, carpan=1.0):
+        # Mermi yukarı doğru hareket eder
+        self.rect.y += int(self.hiz * carpan)
 
     def ciz(self, ekran):
+        # Mermiyi ekrana çizer
         ekran.blit(self.gorsel, self.rect)
 
     def ekran_disinda_mi(self):
-        return self.rect.bottom < 0  # Eğer mermi ekranın dışına çıktıysa True döner
+        # Mermi ekran üstünden çıktıysa True döner
+        return self.rect.bottom < 0

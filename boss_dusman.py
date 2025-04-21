@@ -9,8 +9,8 @@ class BossDusman:
         self.can = 3
         self.hiz = 1.5
 
-    def hareket_et(self):
-        self.rect.y += self.hiz
+    def hareket_et(self, carpan=1.0):  # ✅ yavaşlatma çarpanı eklendi
+        self.rect.y += self.hiz * carpan
 
     def ciz(self, ekran):
         ekran.blit(self.image, self.rect.topleft)
